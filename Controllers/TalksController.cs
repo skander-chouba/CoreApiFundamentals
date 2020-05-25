@@ -46,6 +46,7 @@ namespace CoreApiFundamentals.Controllers
         public async Task<ActionResult<TalkModel>>Get(string moniker, int id)
         {
             var talk = await _repository.GetTalkByMonikerAsync(moniker, id);
+            if (talk == null) return NotFound("Fuck you!");
             return _mapper.Map<TalkModel>(talk);
         }
 
@@ -78,6 +79,61 @@ namespace CoreApiFundamentals.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, ex);
             }
+        }
+
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<TalkModel>> Put(string moniker, int id, TalkModel model)
+        {
+            try
+            {
+                var talk = await _repository.GetTalkByMonikerAsync(moniker, id);
+                if (talk == null) return BadRequest("Couldn't find the requested talk");
+                talk = _mapper.Map(model, talk);
+                if(model.Speaker != null)
+                {
+                    var speaker = await _repository.GetSpeakerAsync(model.Speaker.SpeakerId);
+                    if (speaker != null) talk.Speaker = speaker;
+                }
+                    
+                if (await _repository.SaveChangesAsync())
+                {
+                    return _mapper.Map<TalkModel>(talk);
+                }
+                else
+                {
+                    return BadRequest("failed to update databse");
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex);
+            }
+           
+           
+           
+           
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(string moniker, int id)
+        {
+            try
+            {
+                var talk = await _repository.GetTalkByMonikerAsync(moniker, id);
+                if (talk == null) return BadRequest("Couldn't find the talk");
+                _repository.Delete(talk);
+                if (await _repository.SaveChangesAsync())
+                {
+                    return Ok();
+                }
+                return BadRequest("Failed to delete Talk.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex);
+            }
+            
         }
     }
 }

@@ -14,7 +14,9 @@ namespace CoreApiFundamentals.Data
         {
             CreateMap<Camp, CampModel>()
                 .ForMember(x => x.Venue, y => y.MapFrom(z => z.Location.VenueName)).ReverseMap();
-            CreateMap<Talk, TalkModel>().ReverseMap(); ;
+            CreateMap<Talk, TalkModel>().ReverseMap()
+                .ForMember(t => t.Speaker, opt => opt.Ignore())
+                .ForMember(t => t.Camp, opt => opt.Ignore());
             CreateMap<Speaker, SpeakerModel>().ReverseMap();
         }
     }
